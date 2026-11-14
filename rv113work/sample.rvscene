@@ -1,0 +1,6 @@
+# sample geometry
+mat "white" 0.8 0.8 0.8 0.65 0 0 1.5 0 0 0
+mat "RV_EMIT_warm" 1 0.7 0.4 0.3 0 0 1.5 8 4 1.5
+camera 0 1 5 0 0 0 0 1 0 45
+world 0.18 0.20 0.24
+tri -1 0 0 1 0 0 0 2 0 0

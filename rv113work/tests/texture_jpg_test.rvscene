@@ -1,0 +1,7 @@
+# Run from the package root: build/realvision_render --scene tests/texture_uv_test.rvscene --out tests/texture_uv_test.bmp --samples 2 --width 256 --height 256
+mat "UV checker" 1 1 1 0.8 0 0 1.5 0 0 0
+tex 0 "tests/checker.jpg"
+camera 0 0 3 0 0 0 0 1 0 45
+world 0.12 0.12 0.12
+triuv -1 -1 0 1 -1 0 1 1 0 0 0 1 0 1 1 0
+triuv -1 -1 0 1 1 0 -1 1 0 0 0 1 1 0 1 0

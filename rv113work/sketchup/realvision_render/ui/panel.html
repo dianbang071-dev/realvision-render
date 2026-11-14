@@ -1,0 +1,34 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><style>
+body{font:14px Segoe UI,Arial;background:#191c22;color:#eee;padding:18px}h2{margin-top:0}.card{background:#272d37;padding:13px;border-radius:8px;margin:12px 0}button{width:100%;padding:11px;margin:6px 0;background:#caa14d;border:0;border-radius:6px;font-weight:700;cursor:pointer}.secondary{background:#414b5a;color:#fff}label{display:block;margin:9px 0 4px;color:#ccd2db}input{box-sizing:border-box;width:100%;padding:9px;background:#14171c;color:#fff;border:1px solid #505968;border-radius:5px}#status{padding:12px;background:#11151a;border-radius:6px;overflow-wrap:anywhere;line-height:1.4}.note{font-size:11px;color:#aeb7c5;line-height:1.5}
+</style></head><body><h2>REALVISION RENDER 1.8</h2><p class="note">SketchUp 2025 • Independent engine • CPU BVH accelerated • Sun & Sky + HDRI + IES + PBR + BMP/PPM UV • ACES + bloom</p>
+<div class="card"><b>Engine executable</b><input id="engine" placeholder="Pilih realvision_render.exe"><button class="secondary" onclick="sketchup.choose_engine()">PILIH ENGINE EXE</button><button class="secondary" onclick="sketchup.gpu_check(document.getElementById('engine').value)">PERIKSA VULKAN / RTX 4050</button></div>
+<div class="card"><b>HDRI Environment (.hdr)</b><input id="hdri" placeholder="Opsional: pilih file .hdr"><button class="secondary" onclick="sketchup.choose_hdri()">PILIH HDRI</button><p class="note">HDRI Radiance dipakai untuk environment CPU reference renderer.</p></div>
+<div class="card"><b>IES Photometric Profile (.ies)</b><input id="ies" placeholder="Opsional: pilih file .ies"><button class="secondary" onclick="sketchup.choose_ies()">PILIH FILE IES</button><label>Posisi lampu X / Y / Z (meter)</label><div style="display:flex;gap:6px"><input id="iesx" type="number" value="0" step="0.1"><input id="iesy" type="number" value="2" step="0.1"><input id="iesz" type="number" value="0" step="0.1"></div><label>Intensitas pengali</label><input id="iespower" type="number" value="1" min="0" step="0.1"><p class="note">Profil IES TILT=NONE. Sumbu fotometrik diarahkan ke bawah (-Y).<br>Material PBR melalui nama material: RV_ROUGH_0.3 dan RV_METAL_0.8.</p></div>
+<div class="card"><b>Sun &amp; Sky / Solar Position</b><p class="note">Versi 1.4 memakai procedural daylight sky dan directional sunlight pada CPU reference renderer. Azimuth/elevation default sementara 135°/35°.</p><label>Sun Azimuth (0–360°)</label><input id="sunaz" type="number" min="0" max="360" value="135">
+<label>Sun Elevation (−5–89°)</label><input id="sunel" type="number" min="-5" max="89" value="35">
+<label>Sun Intensity</label><input id="sunpower" type="number" min="0" max="30" step="0.1" value="3">
+<p class="note">Azimuth dihitung dari +Y ke +X; elevation dari horizon. Gunakan kalkulasi posisi matahari berdasarkan tanggal, jam lokal, koordinat, dan UTC offset.</p>
+<label><input id="solar_enabled" type="checkbox" style="width:auto"> Hitung posisi matahari otomatis</label>
+<label>Tanggal lokal</label><input id="solar_date" type="date">
+<label>Waktu lokal</label><input id="solar_time" type="time" value="12:00">
+<label>Latitude (−90 sampai 90)</label><input id="latitude" type="number" step="0.0001" placeholder="Contoh: 3.5952">
+<label>Longitude (−180 sampai 180)</label><input id="longitude" type="number" step="0.0001" placeholder="Contoh: 98.6722">
+<label>UTC offset (jam)</label><input id="timezone" type="number" step="0.5" value="7">
+<p class="note">Koordinat harus diisi sendiri. Contoh koordinat hanya panduan, bukan lokasi otomatis.</p></div>
+<div class="card"><b>Render Preview</b>
+<label>Samples</label><input id="samples" type="number" min="1" max="256" value="8">
+<label>Lebar (px)</label><input id="width" type="number" min="160" max="4096" value="1280">
+<label>Tinggi (px)</label><input id="height" type="number" min="160" max="4096" value="720">
+<label>Exposure (EV)</label><input id="exposure" type="number" min="-5" max="5" step="0.1" value="0">
+<label>Bloom / Glow (0–2)</label><input id="bloom" type="number" min="0" max="2" step="0.05" value="0.18">
+<button onclick="render()">RENDER PREVIEW DARI SKETCHUP</button></div>
+<button class="secondary" onclick="sketchup.export_scene()">EKSPOR FILE .RVSCENE SAJA</button>
+<div id="status">Siap. Pilih executable engine hasil build Windows.</div>
+<p class="note">Render utama versi ini masih CPU reference renderer dengan BRDF PBR GGX eksperimental untuk pencahayaan IES. HDRI .hdr, IES TILT=NONE, dan denoising CPU tersedia. Tekstur BMP (24/32-bit tanpa kompresi) dan PPM (P3/P6, max value 255) tersedia pada CPU; PNG/JPG (jika libpng/libjpeg tersedia saat build), back-face texture, GPU ray tracing belum aktif; pemeriksaan RT hanya membuat logical device dan membaca properti perangkat; tombol diagnostik hanya memeriksa driver, ekstensi, dan pembuatan logical device Vulkan, bukan menjalankan render GPU. Sun & Sky prosedural dan directional sunlight tersedia pada CPU renderer. Output menggunakan ACES-like tone mapping, exposure, anti-alias jitter, dan bloom CPU. Transmisi/refraction dielektrik masih eksperimental pada CPU. Emissive area lighting tersedia pada CPU reference renderer sebagai direct-light sampling eksperimental. Ekspor membawa mesh triangulasi, UV front-face, material, kamera, dan tekstur BMP yang berhasil diekspor oleh SketchUp. Tekstur yang gagal diekspor memakai warna dasar material.</p>
+<script>
+{const d=new Date();document.getElementById('solar_date').value=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+function setEngine(p){document.getElementById('engine').value=p}
+function setHdri(p){document.getElementById('hdri').value=p}
+function showStatus(t){document.getElementById('status').textContent=t}
+function render(){let o={engine:document.getElementById('engine').value,samples:document.getElementById('samples').value,width:document.getElementById('width').value,height:document.getElementById('height').value,exposure:document.getElementById('exposure').value,bloom:document.getElementById('bloom').value,sunaz:document.getElementById('sunaz').value,sunel:document.getElementById('sunel').value,sunpower:document.getElementById('sunpower').value,solar_enabled:document.getElementById('solar_enabled').checked,solar_date:document.getElementById('solar_date').value,solar_time:document.getElementById('solar_time').value,latitude:document.getElementById('latitude').value,longitude:document.getElementById('longitude').value,timezone:document.getElementById('timezone').value,hdri:document.getElementById('hdri').value,ies:document.getElementById('ies').value,iesx:document.getElementById('iesx').value,iesy:document.getElementById('iesy').value,iesz:document.getElementById('iesz').value,iespower:document.getElementById('iespower').value};sketchup.render_preview(JSON.stringify(o))}
+</script></body></html>
