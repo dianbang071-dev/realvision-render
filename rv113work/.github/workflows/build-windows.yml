@@ -1,0 +1,51 @@
+
+name: Build REALVISION RENDER Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Download source
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S rv113work -B rv113work/build -A x64 -DRV_ENABLE_VULKAN=OFF
+
+      - name: Build EXE
+        run: cmake --build rv113work/build --config Release --parallel 2
+
+      - name: Test renderer
+        shell: pwsh
+        run: |
+          $exe = "rv113work/build/Release/realvision_render.exe"
+          if (!(Test-Path $exe)) { throw "EXE tidak ditemukan" }
+          & $exe
+          if ($LASTEXITCODE -ne 0) { throw "Engine gagal dijalankan" }
+          & $exe --scene rv113work/sample.rvscene --out rv113work/build/test.bmp --width 320 --height 240 --samples 1
+          if ($LASTEXITCODE -ne 0) { throw "Tes render gagal" }
+          if (!(Test-Path "rv113work/build/test.bmp")) { throw "BMP tidak ditemukan" }
+
+      - name: Package portable engine
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item rv113work/build/Release/realvision_render.exe dist/
+          Copy-Item rv113work/sample.rvscene dist/
+          Copy-Item rv113work/README_ID.md dist/
+          Compress-Archive -Path dist/* -DestinationPath REALVISION_RENDER_WINDOWS.zip -Force
+
+      - name: Upload EXE package
+        uses: actions/upload-artifact@v4
+        with:
+          name: REALVISION_RENDER_WINDOWS
+          path: REALVISION_RENDER_WINDOWS.zip
+          retention-days: 30
